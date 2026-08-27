@@ -5,6 +5,8 @@ pops the one-time code on screen the moment it arrives.
 
 Stop digging through four mailboxes wondering which one the code went to.
 
+**[otpeek website →](https://jmax92.github.io/OTPeek/)**
+
 - **Click to copy.** The popup never takes focus, so the login field you were
   already typing in stays focused and `⌘V` works immediately.
 - **Push, not polling.** IMAP IDLE means a code appears about a second after
