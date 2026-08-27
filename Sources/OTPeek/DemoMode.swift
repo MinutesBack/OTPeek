@@ -29,7 +29,7 @@ enum DemoMode {
     ]
 
     final class Delegate: NSObject, NSApplicationDelegate {
-        enum Mode { case hud, settings, single(Int) }
+        enum Mode: Equatable { case hud, settings, addSheet, single(Int) }
 
         private let mode: Mode
         private var hudManager: HUDManager?
@@ -63,9 +63,9 @@ enum DemoMode {
                 sampleHits.forEach { manager.present($0) }
                 hudManager = manager
 
-            case .settings:
+            case .settings, .addSheet:
                 let controller = SettingsWindowController(onSaved: {})
-                controller.show()
+                controller.show(openingAddSheet: mode == .addSheet)
                 settingsController = controller
             }
         }

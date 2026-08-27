@@ -159,6 +159,8 @@ enum MicrosoftOAuth {
     }
 
     private static func post(_ url: URL, form: [String: String]) throws -> [String: Any] {
+        try NetworkPolicy.check(url.host ?? "")
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")

@@ -46,6 +46,9 @@ final class IMAPClient {
     // MARK: - Connection
 
     func connect(timeout: TimeInterval = 30) throws {
+        // Refuses anything that is not a mail server the user configured.
+        try NetworkPolicy.check(host)
+
         let tls = NWProtocolTLS.Options()
         let tcp = NWProtocolTCP.Options()
         tcp.connectionTimeout = Int(timeout)

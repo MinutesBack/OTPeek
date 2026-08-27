@@ -157,6 +157,46 @@ content.
   the expected healthy result on macOS 14+, while `N unreadable` means the
   decoder needs attention.
 
+## Security
+
+You are about to type a mail password into an app you downloaded. That deserves
+more than a promise, so the guarantee is enforced in code and checked by the
+test suite.
+
+**There is no OTPeek server.** Your mail is read by connecting straight from
+your Mac to your provider over TLS. Nothing is relayed through anyone else —
+not the author, not an organisation, not an analytics service.
+
+**Connections are allow-listed, not merely intended.** Every outbound
+connection passes through `NetworkPolicy`, which permits exactly two things: a
+mail server you entered yourself, and `login.microsoftonline.com` for Outlook
+sign-in. Anything else throws before a socket opens, and the refusal is logged.
+
+**The build refuses to ship if that stops being true.** `./audit.sh` fails if a
+networking API appears in any file other than the two that route through the
+gate, if either stops calling it, if anything resembling analytics appears, or
+if a third-party dependency is added. `build.sh` runs it and will not produce
+an app if it fails.
+
+**Passwords go to the Keychain, never to disk.** They are stored with
+`kSecAttrAccessibleWhenUnlocked`, so they are unreadable while the Mac is
+locked. The config file at `~/Library/Application Support/OTPeek/config.json`
+holds server names and addresses only — no secrets.
+
+**You can see what it talked to.** Every connection is written to
+`~/Library/Logs/OTPeek/otpeek.log`, senders and hosts only, never message
+content or codes.
+
+Check it yourself:
+
+```bash
+./audit.sh          # what this build can reach, and why
+./run-tests.sh      # 43 tests, including the refusal path
+```
+
+The strongest guarantee is the one you already use to install it: the source is
+here, it has no dependencies, and you build it yourself.
+
 ## Privacy
 
 Everything runs on your Mac. Mail is read over TLS directly from your provider,

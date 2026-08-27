@@ -16,7 +16,7 @@ enum Keychain {
 
         var insert = query
         insert[kSecValueData as String] = data
-        insert[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+        insert[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
         return SecItemAdd(insert as CFDictionary, nil) == errSecSuccess
     }
 

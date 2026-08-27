@@ -1,6 +1,8 @@
 #!/bin/bash
-# Runs the extractor corpus test.
+# Runs the extractor corpus, the mail-parsing tests, and the security audit.
 set -euo pipefail
 cd "$(dirname "$0")"
 swift build -c release 2>&1 | grep -E "error|warning:" || true
 ./.build/release/OTPeek --self-test
+echo
+./audit.sh

@@ -16,9 +16,13 @@ DIST="dist"
 echo "==> Compiling (release)"
 swift build -c release
 
-echo "==> Running tests"
+echo "==> Running tests and security audit"
 "./.build/release/$APP_NAME" --self-test > /dev/null || {
   echo "Tests failed — refusing to build. Run ./run-tests.sh to see why." >&2
+  exit 1
+}
+./audit.sh > /dev/null || {
+  echo "Security audit failed — refusing to build. Run ./audit.sh to see why." >&2
   exit 1
 }
 

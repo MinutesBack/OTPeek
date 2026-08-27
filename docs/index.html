@@ -118,6 +118,7 @@
   }
   .point h3 { font-family: var(--display); font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -.015em; }
   .point p { font-size: 15px; color: var(--text-mute); }
+  .point code { font-family: var(--mono); font-size: 13.5px; color: var(--text); }
 
   /* ---------- setup ---------- */
 
@@ -247,6 +248,32 @@
           mail is read directly from your provider, and your texts never leave
           the Mac.
         </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Your passwords stay on your Mac.</h2>
+        <p>
+          You are about to type a mail password into an app you downloaded, so
+          this is enforced in code rather than promised in a paragraph.
+        </p>
+      </div>
+      <div class="points">
+        <article class="point">
+          <h3>There is no server</h3>
+          <p>Your Mac connects straight to your mail provider. Nothing is relayed through anyone else — not the authors, not an analytics service.</p>
+        </article>
+        <article class="point">
+          <h3>It can only reach your mailboxes</h3>
+          <p>Every connection passes a check that allows the servers you added, and Microsoft's sign-in page. Anything else fails before it opens.</p>
+        </article>
+        <article class="point">
+          <h3>The build checks itself</h3>
+          <p>Run <code>./audit.sh</code>. If any code outside the two vetted files could reach the network, the build refuses to produce an app.</p>
+        </article>
       </div>
     </div>
   </section>

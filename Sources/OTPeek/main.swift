@@ -5,7 +5,9 @@ if CommandLine.arguments.contains("--self-test") {
     let extractorFailures = SelfTest.run()
     print("\n=== Mail parsing ===")
     let mimeFailures = SelfTest.runMIME()
-    exit(extractorFailures + mimeFailures == 0 ? 0 : 1)
+    print("\n=== Network policy ===")
+    let securityFailures = SelfTest.runSecurity()
+    exit(extractorFailures + mimeFailures + securityFailures == 0 ? 0 : 1)
 }
 
 // Connectivity check for troubleshooting: OTPeek --imap-probe imap.gmail.com
@@ -28,7 +30,7 @@ if let probeIndex = CommandLine.arguments.firstIndex(of: "--imap-probe") {
 
 // Documentation screenshots: render the real views with sample data.
 let demoModes: [String: DemoMode.Delegate.Mode] = [
-    "--demo-hud": .hud, "--demo-settings": .settings,
+    "--demo-hud": .hud, "--demo-settings": .settings, "--demo-add": .addSheet,
 ]
 if let flagIndex = CommandLine.arguments.firstIndex(of: "--demo-hit"),
    flagIndex + 1 < CommandLine.arguments.count,
