@@ -30,6 +30,8 @@
   }
 
   * { box-sizing: border-box; }
+  img { max-width: 100%; }
+  .hero-grid > *, .setup > *, .points > * { min-width: 0; }
 
   body {
     margin: 0;
@@ -159,7 +161,7 @@
 
   @media (max-width: 880px) {
     .hero-grid, .points, .setup { grid-template-columns: minmax(0, 1fr); }
-    .popups { max-width: 384px; }
+    .popups { max-width: min(384px, 100%); margin-inline: auto; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
