@@ -19,7 +19,7 @@ final class SettingsWindowController {
             let window = NSWindow(contentViewController: hosting)
             window.title = "OTPeek Settings"
             window.styleMask = [.titled, .closable, .miniaturizable]
-            window.setContentSize(NSSize(width: 560, height: 520))
+            window.setContentSize(NSSize(width: 560, height: 400))
             window.isReleasedWhenClosed = false
             window.center()
             self.window = window

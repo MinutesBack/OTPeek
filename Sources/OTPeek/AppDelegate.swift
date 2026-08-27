@@ -8,14 +8,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let dedupeSeconds: TimeInterval = 90
 
     private var statusItem: NSStatusItem!
-    private var menu = NSMenu()
-    private var hudManager: HUDManager!
+    var menu = NSMenu()
+    var hudManager: HUDManager!
 
     private var messagesWatcher: MessagesWatcher?
     private var imapWatchers: [IMAPWatcher] = []
 
-    private var history: [Hit] = []
-    private var statuses: [(key: String, state: SourceState, detail: String)] = []
+    var history: [Hit] = []
+    var statuses: [(key: String, state: SourceState, detail: String)] = []
     private var recentHits: [String: Date] = [:]
 
     private var settingsController: SettingsWindowController?
@@ -68,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return item
     }
 
-    private func rebuildMenu() {
+    func rebuildMenu() {
         menu.removeAllItems()
         let settings = SettingsStore.shared.settings
 

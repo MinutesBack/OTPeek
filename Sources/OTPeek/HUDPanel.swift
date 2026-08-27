@@ -47,6 +47,10 @@ final class HUDPanel: NSObject {
         panel.isMovableByWindowBackground = false
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
+        // The text below is drawn white, and .hudWindow follows the system
+        // appearance — on a light-mode Mac that would render light-on-light.
+        // Pinning the panel to dark keeps it readable either way.
+        panel.appearance = NSAppearance(named: .darkAqua)
 
         let blur = NSVisualEffectView(frame: frame)
         blur.material = .hudWindow

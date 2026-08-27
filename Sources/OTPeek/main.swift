@@ -26,6 +26,19 @@ if let probeIndex = CommandLine.arguments.firstIndex(of: "--imap-probe") {
     }
 }
 
+// Documentation screenshots: render the real views with sample data.
+let demoModes: [String: DemoMode.Delegate.Mode] = [
+    "--demo-hud": .hud, "--demo-settings": .settings,
+]
+for (flag, mode) in demoModes where CommandLine.arguments.contains(flag) {
+    let app = NSApplication.shared
+    app.setActivationPolicy(.accessory)
+    let demoDelegate = DemoMode.Delegate(mode: mode)
+    app.delegate = demoDelegate
+    app.run()
+    exit(0)
+}
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
