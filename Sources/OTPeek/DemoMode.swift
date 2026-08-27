@@ -12,12 +12,24 @@ enum DemoMode {
             source: "sms", account: "SMS", sender: "Google", senderShort: "Google",
             subject: "", received: Date(), confidence: 0.9),
         Hit(code: nil, link: "https://linear.app/auth/magic?token=xyz789abcdef",
-            source: "email", account: "Work Gmail", sender: "Linear",
+            source: "email", account: "Personal Gmail", sender: "Linear",
             senderShort: "Linear", subject: "Sign in", received: Date(), confidence: 1.0),
+        Hit(code: "728193", link: nil,
+            source: "email", account: "Work Gmail", sender: "Stripe",
+            senderShort: "Stripe", subject: "", received: Date(), confidence: 0.9),
+        Hit(code: "947201", link: nil,
+            source: "email", account: "Outlook", sender: "Microsoft",
+            senderShort: "Microsoft", subject: "", received: Date(), confidence: 0.9),
+        Hit(code: nil, link: "https://www.notion.so/activate/9f2b1c7ade",
+            source: "email", account: "iCloud", sender: "Notion",
+            senderShort: "Notion", subject: "Activate", received: Date(), confidence: 1.0),
+        Hit(code: "55712", link: nil,
+            source: "sms", account: "SMS", sender: "Qonto", senderShort: "Qonto",
+            subject: "", received: Date(), confidence: 0.9),
     ]
 
     final class Delegate: NSObject, NSApplicationDelegate {
-        enum Mode { case hud, settings }
+        enum Mode { case hud, settings, single(Int) }
 
         private let mode: Mode
         private var hudManager: HUDManager?
@@ -31,6 +43,14 @@ enum DemoMode {
 
         func applicationDidFinishLaunching(_ notification: Notification) {
             switch mode {
+            case .single(let index):
+                backdrop = Self.makeBackdrop()
+                let manager = HUDManager(settings: HUDSettings(autoCopy: false,
+                                                               timeoutSeconds: 300,
+                                                               playSound: false))
+                if index < sampleHits.count { manager.present(sampleHits[index]) }
+                hudManager = manager
+
             case .hud:
                 // The popups use translucent HUD material, so on their own they
                 // take on whatever is behind them. A controlled backdrop makes

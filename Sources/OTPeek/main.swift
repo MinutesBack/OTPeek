@@ -30,6 +30,16 @@ if let probeIndex = CommandLine.arguments.firstIndex(of: "--imap-probe") {
 let demoModes: [String: DemoMode.Delegate.Mode] = [
     "--demo-hud": .hud, "--demo-settings": .settings,
 ]
+if let flagIndex = CommandLine.arguments.firstIndex(of: "--demo-hit"),
+   flagIndex + 1 < CommandLine.arguments.count,
+   let which = Int(CommandLine.arguments[flagIndex + 1]) {
+    let app = NSApplication.shared
+    app.setActivationPolicy(.accessory)
+    let demoDelegate = DemoMode.Delegate(mode: .single(which))
+    app.delegate = demoDelegate
+    app.run()
+    exit(0)
+}
 for (flag, mode) in demoModes where CommandLine.arguments.contains(flag) {
     let app = NSApplication.shared
     app.setActivationPolicy(.accessory)

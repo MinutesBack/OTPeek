@@ -137,6 +137,11 @@ final class HUDPanel: NSObject {
     private func sourceText() -> String {
         let icon = hit.source == "email" ? "✉︎" : "💬"
         let who = hit.senderShort.isEmpty ? hit.account : hit.senderShort
+        // Naming the mailbox matters when codes arrive across several
+        // addresses; for texts the service name adds nothing.
+        if hit.source == "email", !hit.account.isEmpty, hit.account != who {
+            return String("\(icon)  \(who)  ·  \(hit.account)".prefix(54))
+        }
         return String("\(icon)  \(who)".prefix(48))
     }
 
