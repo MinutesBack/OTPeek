@@ -215,7 +215,7 @@ struct AddAccountView: View {
                 TextField("Application (client) ID", text: $clientID)
                 TextField("Tenant", text: $tenant)
                 Link("How do I get a client ID?",
-                     destination: URL(string: "https://github.com/JMax92/OTPeek#outlook--microsoft-365")!)
+                     destination: URL(string: "https://github.com/MinutesBack/OTPeek#outlook--microsoft-365")!)
                     .font(.caption)
 
                 if let challenge = deviceCode {

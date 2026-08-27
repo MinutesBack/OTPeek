@@ -5,7 +5,7 @@ pops the one-time code on screen the moment it arrives.
 
 Stop digging through four mailboxes wondering which one the code went to.
 
-**[otpeek website →](https://jmax92.github.io/OTPeek/)**
+**[otpeek website →](https://minutesback.github.io/OTPeek/)**
 
 - **Click to copy.** The popup never takes focus, so the login field you were
   already typing in stays focused and `⌘V` works immediately.
@@ -22,7 +22,7 @@ Stop digging through four mailboxes wondering which one the code went to.
 Requires macOS 14 or later.
 
 ```bash
-git clone https://github.com/JMax92/OTPeek.git
+git clone https://github.com/MinutesBack/OTPeek.git
 cd OTPeek && ./build.sh --install
 ```
 
