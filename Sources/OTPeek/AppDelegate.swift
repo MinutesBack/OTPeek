@@ -25,8 +25,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         hudManager = HUDManager(settings: SettingsStore.shared.settings.hud)
         buildStatusItem()
+
+        let settings = SettingsStore.shared.settings
+        Log.write("[ok] OTPeek launched — "
+                  + "\(settings.accounts.count) mailbox(es), "
+                  + "sms \(settings.smsEnabled ? "on" : "off"), "
+                  + "bundle \(Bundle.main.bundleURL.path)")
+
         startWatchers()
-        Log.write("[ok] OTPeek launched")
 
         // First run with nothing configured is a dead end otherwise.
         if SettingsStore.shared.settings.accounts.isEmpty {
@@ -159,6 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Message handling
 
     private func updateStatus(_ key: String, _ state: SourceState, _ detail: String) {
+        Log.write("[\(state.rawValue)] \(key): \(detail)")
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if let index = self.statuses.firstIndex(where: { $0.key == key }) {
