@@ -5,6 +5,16 @@ import Security
 enum Keychain {
     private static let service = "OTPeek"
 
+    /// Strips whitespace from a pasted credential.
+    ///
+    /// Google presents app passwords as four spaced groups ("abcd efgh ijkl
+    /// mnop") and people copy them exactly as shown, but IMAP LOGIN takes the
+    /// sixteen characters. Hyphens are preserved: Apple's app-specific
+    /// passwords genuinely contain them.
+    static func normalise(_ secret: String) -> String {
+        secret.components(separatedBy: .whitespacesAndNewlines).joined()
+    }
+
     static func set(_ secret: String, for account: String) -> Bool {
         guard let data = secret.data(using: .utf8) else { return false }
         let query: [String: Any] = [

@@ -252,7 +252,10 @@ struct AddAccountView: View {
     @State private var clientID = ""
     @State private var tenant = "common"
 
-    @State private var explaining = true
+    @State private var explaining = false
+    @State private var clipboardTimer: Timer?
+    @State private var clipboardCount = NSPasteboard.general.changeCount
+    @State private var autofilled = false
     @State private var busy = false
     @State private var message: String?
     @State private var failed = false
@@ -286,14 +289,18 @@ struct AddAccountView: View {
                 Button("Cancel") { dismiss() }
                 Spacer()
                 if busy { ProgressView().controlSize(.small) }
-                Button(isMicrosoft ? "Sign in with Microsoft" : "Check and save") { submit() }
+                Button(isMicrosoft ? "Sign in with Microsoft" : "Connect") { submit() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(busy || email.isEmpty || (!isMicrosoft && password.isEmpty))
             }
         }
         .padding(20)
         .frame(width: 480, height: 560)
-        .onAppear { syncProviderDefaults() }
+        .onAppear {
+            syncProviderDefaults()
+            startWatchingClipboard()
+        }
+        .onDisappear { stopWatchingClipboard() }
     }
 
     // MARK: Sections
@@ -369,55 +376,81 @@ struct AddAccountView: View {
                 }
             } else {
                 field(provider.needsAppPassword ? "App password" : "Password",
-                      help: provider.needsAppPassword
-                          ? "16 characters from \(shortName). Not the password you normally type."
-                          : nil) {
+                      help: autofilled ? nil : nil) {
                     SecureField("", text: $password)
+                }
+                if autofilled {
+                    Label("Filled in from what you just copied", systemImage: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
                 }
             }
         }
     }
 
+    /// The whole credential step, reduced to one button.
+    ///
+    /// The previous version explained the situation and then listed three
+    /// manual steps, which is where people gave up. The explanation is still
+    /// available, but the default path is now: press the button, copy what the
+    /// provider shows you, and the field fills itself.
     @ViewBuilder
     private var explainer: some View {
-        if !provider.why.isEmpty {
+        if isMicrosoft {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Microsoft does not allow passwords for mail apps, so this opens "
+                         + "their sign-in page in your browser.")
+                        .font(.callout)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let guide = URL(string: "https://github.com/MinutesBack/OTPeek#outlook--microsoft-365") {
+                        Button("What is the client ID for?") { NSWorkspace.shared.open(guide) }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else if provider.needsAppPassword, let link = provider.credentialURL,
+                  let url = URL(string: link) {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 9) {
+                    Text("\(shortName) needs a one-time app password instead of your normal one.")
+                        .font(.callout)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Button {
+                        NSWorkspace.shared.open(url)
+                    } label: {
+                        Label("Create one at \(shortName)", systemImage: "arrow.up.forward.square")
+                    }
+                    .controlSize(.large)
+
+                    Text("Copy it when it appears — OTPeek fills the field in for you.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             DisclosureGroup(isExpanded: $explaining) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text(provider.why)
                         .font(.callout)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-
                     ForEach(Array(provider.steps.enumerated()), id: \.offset) { index, step in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text("\(index + 1).")
                                 .font(.callout.monospacedDigit())
                                 .foregroundStyle(.secondary)
-                            Text(step)
-                                .font(.callout)
+                            Text(step).font(.callout)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
-                    }
-
-                    if let credentialURL = provider.credentialURL,
-                       let url = URL(string: credentialURL) {
-                        Button("Open \(shortName) to create one") {
-                            NSWorkspace.shared.open(url)
-                        }
-                        .padding(.top, 2)
-                    }
-                    if isMicrosoft,
-                       let guide = URL(string: "https://github.com/MinutesBack/OTPeek#outlook--microsoft-365") {
-                        Button("Open the setup guide") { NSWorkspace.shared.open(guide) }
-                            .padding(.top, 2)
                     }
                 }
                 .padding(.top, 8)
             } label: {
-                Text(isMicrosoft
-                     ? "Why does this need a browser sign-in?"
-                     : "Why not my normal password?")
-                    .font(.callout)
+                Text("Why not my normal password?").font(.callout)
             }
         }
     }
@@ -459,13 +492,42 @@ struct AddAccountView: View {
         }
     }
 
+    /// Watches the clipboard only while this sheet is open, so the password
+    /// copied from the provider's page lands in the field without a paste.
+    private func startWatchingClipboard() {
+        clipboardTimer?.invalidate()
+        clipboardTimer = Timer.scheduledTimer(withTimeInterval: 0.7, repeats: true) { _ in
+            let board = NSPasteboard.general
+            guard board.changeCount != clipboardCount else { return }
+            clipboardCount = board.changeCount
+            guard password.isEmpty, provider.needsAppPassword,
+                  let copied = board.string(forType: .string) else { return }
+            let candidate = Keychain.normalise(copied)
+            guard looksLikeCredential(candidate) else { return }
+            password = candidate
+            autofilled = true
+        }
+    }
+
+    private func stopWatchingClipboard() {
+        clipboardTimer?.invalidate()
+        clipboardTimer = nil
+    }
+
+    /// Deliberately narrow, so ordinary clipboard contents are never captured.
+    private func looksLikeCredential(_ value: String) -> Bool {
+        guard !value.contains("@"), value.count >= 12, value.count <= 40 else { return false }
+        return value.range(of: "^[A-Za-z0-9-]+$", options: .regularExpression) != nil
+    }
+
     private func syncProviderDefaults() {
         host = provider.host
         port = String(provider.port)
         message = nil
         failed = false
         deviceCode = nil
-        explaining = !provider.why.isEmpty
+        explaining = false
+        autofilled = false
     }
 
     /// Every account is checked against the real server before it is saved, so
@@ -487,7 +549,7 @@ struct AddAccountView: View {
             account.tenant = tenant.isEmpty ? "common" : tenant
         }
 
-        let secret = password
+        let secret = Keychain.normalise(password)
         DispatchQueue.global().async {
             do {
                 let token: String
