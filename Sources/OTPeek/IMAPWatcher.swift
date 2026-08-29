@@ -81,8 +81,21 @@ final class IMAPWatcher {
         onStatus(account.id, .connecting, "\(account.label) · connecting…")
 
         guard let secret = credentialProvider(account) else {
+            if account.auth == .password, case .failure(let reason) = Keychain.read(account.id) {
+                switch reason {
+                case .notStored:
+                    throw IMAPClient.IMAPError.authenticationFailed(
+                        "Password not found in the Keychain — re-add this mailbox in Settings")
+                case .blocked(let status):
+                    // Usually a rebuilt app: the Keychain entry was saved by a
+                    // build with a different signature, so macOS withholds it.
+                    throw IMAPClient.IMAPError.authenticationFailed(
+                        "macOS would not release the saved password (\(status)). "
+                        + "Choose Allow if prompted, or re-add this mailbox.")
+                }
+            }
             throw IMAPClient.IMAPError.authenticationFailed(
-                "No credential stored — open Settings and re-add this account")
+                "Could not sign in — re-add this mailbox in Settings")
         }
 
         let client = IMAPClient(host: account.host, port: account.port)

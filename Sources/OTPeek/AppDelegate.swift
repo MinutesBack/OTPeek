@@ -184,6 +184,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.statuses.append((key, state, detail))
             }
             self.rebuildMenu()
+
+            if key == "sms", state == .error, detail.contains("Full Disk Access") {
+                // Let the menu bar item appear first, so the invitation has
+                // something to point at.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    FullDiskAccessPrompt.presentIfNeeded()
+                }
+            }
         }
     }
 
@@ -257,10 +265,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func grantFullDiskAccess(_ sender: Any?) {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles") {
-            NSWorkspace.shared.open(url)
-        }
-        NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
+        FullDiskAccessPrompt.presentFromMenu()
     }
 
     @objc func openSettings(_ sender: Any?) {

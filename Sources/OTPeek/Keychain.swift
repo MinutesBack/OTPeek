@@ -30,6 +30,30 @@ enum Keychain {
         return SecItemAdd(insert as CFDictionary, nil) == errSecSuccess
     }
 
+    /// Why a credential could not be read. "Not stored" and "blocked" need
+    /// completely different responses, so they are reported separately.
+    enum Failure: Error {
+        case notStored
+        case blocked(OSStatus)
+    }
+
+    static func read(_ account: String) -> Result<String, Failure> {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        if status == errSecSuccess, let data = item as? Data,
+           let secret = String(data: data, encoding: .utf8) {
+            return .success(secret)
+        }
+        return .failure(status == errSecItemNotFound ? .notStored : .blocked(status))
+    }
+
     static func get(_ account: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

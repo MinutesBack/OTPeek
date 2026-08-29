@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 import SwiftUI
 
 /// Hosts the settings UI. Everything a user needs to configure OTPeek lives
@@ -61,6 +62,7 @@ final class SettingsModel: ObservableObject {
     @Published var playSound: Bool
     @Published var autoCopy: Bool
     @Published var showingAdd = false
+    @Published var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
 
     private let onSaved: () -> Void
 
@@ -89,6 +91,28 @@ final class SettingsModel: ObservableObject {
         accounts.removeAll { $0.id == account.id }
         accounts.append(account)
         persist()
+
+        // Mailboxes are saved, but a mailbox no one is watching looks exactly
+        // like a mailbox that was forgotten. Without this, a reboot leaves the
+        // app closed and nothing arrives.
+        if accounts.count == 1 && !launchAtLogin {
+            setLaunchAtLogin(true)
+        }
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        do {
+            if enabled {
+                if SMAppService.mainApp.status != .enabled { try SMAppService.mainApp.register() }
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+            Log.write("[ok] start at login: \(launchAtLogin)")
+        } catch {
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+            Log.write("[error] start at login: \(error.localizedDescription)")
+        }
     }
 
     func remove(_ account: Account) {
@@ -143,6 +167,17 @@ struct SettingsView: View {
             } label: {
                 Label("Add mailbox", systemImage: "plus")
             }
+
+            Divider()
+
+            Toggle("Start OTPeek when I log in", isOn: Binding(
+                get: { model.launchAtLogin },
+                set: { model.setLaunchAtLogin($0) }))
+            Text("Your mailboxes and passwords are saved either way. This keeps OTPeek "
+                 + "running after a restart, so codes still arrive.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Divider()
 

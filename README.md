@@ -47,9 +47,29 @@ provider, enter your address and password, and OTPeek connects to the real
 server before saving — so a wrong password tells you immediately instead of
 failing silently later.
 
-Gmail, iCloud, Fastmail and Yahoo all require an **app password** rather than
-your normal one; the sheet links straight to the page that creates it. Any
-other IMAP server works too — just enter its hostname.
+Presets cover Gmail and Google Workspace, Outlook.com / Hotmail / Live,
+Microsoft 365, iCloud, Proton Mail, Fastmail, Yahoo, Zoho, GMX, AOL, Orange,
+Free, SFR and Laposte.net — plus any other IMAP server by hostname.
+
+Where a provider requires an **app password** rather than your normal one, the
+sheet opens the page that creates it and **fills the field in for you** as soon
+as you copy it. Google shows app passwords in four spaced groups; the spaces
+are stripped automatically, which is a common cause of "credentials rejected"
+elsewhere.
+
+Two Microsoft paths exist because the endpoints genuinely differ. **Personal
+accounts** (outlook.com, hotmail, live) still accept an app password on
+`imap-mail.outlook.com` and need no registration at all. Only **work and school
+accounts** hit `LOGINDISABLED` and require the browser sign-in below.
+
+**Proton Mail** needs [Proton Mail Bridge](https://proton.me/mail/bridge)
+running, with its IMAP connection mode set to SSL. Bridge serves IMAP on
+loopback with a self-signed certificate, which OTPeek accepts for loopback
+addresses only.
+
+Mailboxes and passwords are saved, and adding your first one switches on
+**Start at login**, so codes keep arriving after a restart. You never reconnect
+a mailbox.
 
 ### Text messages
 
@@ -58,8 +78,11 @@ Two things are needed:
 1. **On your iPhone:** Settings → Apps → Messages → Text Message Forwarding,
    and enable your Mac.
 2. **On your Mac:** grant Full Disk Access to OTPeek, so it can read the
-   Messages database. The menu shows a **Grant Full Disk Access…** shortcut
-   that opens the right pane and reveals the app for you.
+   Messages database. macOS never asks for this permission by itself — it just
+   returns nothing — so OTPeek invites you on launch, opens the right settings
+   pane, reveals the app in Finder to drag in, and offers to restart itself
+   afterwards, since the permission is only picked up when the app starts. The
+   same flow is on the menu under **Grant Full Disk Access…**.
 
 Full Disk Access is tied to the app's signature, so if you rebuild OTPeek you
 may need to remove and re-add it in that list.

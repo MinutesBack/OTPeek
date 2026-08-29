@@ -4,6 +4,21 @@ struct HUDSettings: Codable {
     var autoCopy: Bool = false
     var timeoutSeconds: Double = 45
     var playSound: Bool = true
+
+    init(autoCopy: Bool = false, timeoutSeconds: Double = 45, playSound: Bool = true) {
+        self.autoCopy = autoCopy
+        self.timeoutSeconds = timeoutSeconds
+        self.playSound = playSound
+    }
+
+    /// Missing keys fall back to the default rather than failing the whole
+    /// decode — see the note on AppSettings.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        autoCopy = try values.decodeIfPresent(Bool.self, forKey: .autoCopy) ?? false
+        timeoutSeconds = try values.decodeIfPresent(Double.self, forKey: .timeoutSeconds) ?? 45
+        playSound = try values.decodeIfPresent(Bool.self, forKey: .playSound) ?? true
+    }
 }
 
 struct AppSettings: Codable {
@@ -14,6 +29,27 @@ struct AppSettings: Codable {
     /// app never dumps a week of old codes on screen.
     var maxAgeMinutes: Int = 10
     var historySize: Int = 12
+    /// Set when someone dismisses the Full Disk Access invitation for good.
+    var declinedFullDiskAccess: Bool = false
+
+    init() {}
+
+    /// Decoded key by key, with each missing key falling back to its default.
+    ///
+    /// The synthesised decoder fails the entire decode when a key is absent,
+    /// which means adding any new setting would make every existing config
+    /// unreadable — silently discarding the mailboxes someone had already
+    /// configured. Decoding leniently keeps old files working.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        accounts = try values.decodeIfPresent([Account].self, forKey: .accounts) ?? []
+        smsEnabled = try values.decodeIfPresent(Bool.self, forKey: .smsEnabled) ?? true
+        hud = try values.decodeIfPresent(HUDSettings.self, forKey: .hud) ?? HUDSettings()
+        maxAgeMinutes = try values.decodeIfPresent(Int.self, forKey: .maxAgeMinutes) ?? 10
+        historySize = try values.decodeIfPresent(Int.self, forKey: .historySize) ?? 12
+        declinedFullDiskAccess = try values.decodeIfPresent(
+            Bool.self, forKey: .declinedFullDiskAccess) ?? false
+    }
 }
 
 /// Reads and writes `~/Library/Application Support/OTPeek/config.json`.
