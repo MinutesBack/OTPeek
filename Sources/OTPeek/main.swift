@@ -16,7 +16,10 @@ if let probeIndex = CommandLine.arguments.firstIndex(of: "--imap-probe") {
         ? CommandLine.arguments[probeIndex + 1] : "imap.gmail.com"
     let client = IMAPClient(host: host, port: 993)
     do {
-        try client.connect()
+        // The host is named on the command line by the person running it, so
+        // it is allowed for this one call the same way a new mailbox is while
+        // it is being verified.
+        try NetworkPolicy.whileVerifying(host) { try client.connect() }
         print("connected to \(host)")
         print("IDLE supported: \(client.supportsIDLE)")
         print("capabilities: \(client.capabilities.sorted().joined(separator: " "))")

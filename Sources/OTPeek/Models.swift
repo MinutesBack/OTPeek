@@ -83,9 +83,23 @@ struct Provider {
                     "Open the App passwords page and create one called OTPeek.",
                     "Copy the 16 characters Google shows you — OTPeek fills them in.",
                  ]),
-        Provider(key: "outlook", label: "Outlook / Microsoft 365",
+        Provider(key: "outlookcom", label: "Outlook.com / Hotmail / Live",
+                 host: "imap-mail.outlook.com", port: 993, auth: .password,
+                 help: "Personal Microsoft accounts need an app password — no Azure setup.",
+                 credentialURL: "https://account.live.com/proofs/AppPassword",
+                 monogram: "O", tintHex: "#0078D4",
+                 why: "Microsoft blocks normal passwords for mail apps, but personal accounts "
+                    + "can still create an app password, which is far simpler than the sign-in "
+                    + "that work accounts require. It works only for mail and can be revoked "
+                    + "on its own.",
+                 steps: [
+                    "Turn on two-step verification for your Microsoft account, if it isn't on.",
+                    "Open the app passwords page and create one.",
+                    "Copy it — OTPeek fills it in.",
+                 ]),
+        Provider(key: "outlook", label: "Microsoft 365 (work or school)",
                  host: "outlook.office365.com", port: 993, auth: .xoauth2,
-                 help: "Signs in through Microsoft — no password is typed here.",
+                 help: "Work and school accounts sign in through Microsoft. Needs a client ID.",
                  credentialURL: nil,
                  monogram: "O", tintHex: "#0F6CBD",
                  why: "Microsoft no longer allows password sign-in for mail apps, so OTPeek sends you to Microsoft's own sign-in page. It never sees your password — only a token you can revoke from your account.",
