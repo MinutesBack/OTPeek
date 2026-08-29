@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Hosts the settings UI. Everything a user needs to configure OTPeek lives
 /// here — there is deliberately no command line step.
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
     private var model: SettingsModel?
@@ -12,6 +12,7 @@ final class SettingsWindowController {
 
     init(onSaved: @escaping () -> Void) {
         self.onSaved = onSaved
+        super.init()
     }
 
     func show(openingAddSheet: Bool = false) {
@@ -26,15 +27,28 @@ final class SettingsWindowController {
             window.setContentSize(NSSize(width: 560, height: 400))
             window.isReleasedWhenClosed = false
             window.center()
+            window.delegate = self
             self.window = window
         }
+
+        // A menu bar app runs as .accessory, which cannot reliably bring a
+        // window to the front or give it keyboard focus — the window would
+        // open behind everything, or not appear at all. Becoming a regular
+        // app for as long as a window is open fixes both, and gives the
+        // window a Dock icon and Cmd-Tab entry while it is up.
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
         if pendingAddSheet {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
                 self?.model?.showingAdd = true
             }
         }
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
     }
 }
 

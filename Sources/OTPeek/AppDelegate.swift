@@ -46,6 +46,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         stopWatchers()
     }
 
+    /// Clicking the app in Finder, Spotlight or the Dock while it is already
+    /// running previously did nothing at all: a menu bar app has no Dock icon
+    /// and no window, so there was no feedback that it was running. Show
+    /// settings instead.
+    func applicationShouldHandleReopen(_ sender: NSApplication,
+                                       hasVisibleWindows flag: Bool) -> Bool {
+        openSettings(nil)
+        return true
+    }
+
     // MARK: - Status item
 
     private func buildStatusItem() {
