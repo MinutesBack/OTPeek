@@ -68,13 +68,25 @@ enum FullDiskAccessPrompt {
     }
 
     private static func openSettingsPane() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security"
-                         + "?Privacy_AllFiles") {
-            NSWorkspace.shared.open(url)
-        }
-        // Reveal the bundle so it can be dragged into the list.
+        // Reveal first, so Finder ends up behind Settings rather than in front
+        // of it — otherwise the Applications folder is all you see.
         NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
-        Log.write("[ok] opened Full Disk Access settings")
+
+        // Ventura renamed this pane. The old identifier still "opens"
+        // successfully but lands nowhere, so the modern one is tried first and
+        // the legacy one is only a fallback for older systems.
+        let candidates = [
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AllFiles",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+        ]
+        for candidate in candidates {
+            guard let url = URL(string: candidate) else { continue }
+            if NSWorkspace.shared.open(url) {
+                Log.write("[ok] opened Full Disk Access settings")
+                return
+            }
+        }
+        Log.write("[error] could not open the Full Disk Access pane")
     }
 
     /// The permission is read at process start, so offer the restart directly.
