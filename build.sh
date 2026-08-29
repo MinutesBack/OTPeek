@@ -60,7 +60,34 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 
 echo "==> Signing"
-codesign --force --deep --sign - "$APP"
+# macOS ties Full Disk Access to the app's code signature. An ad-hoc signature
+# has no certificate, so the grant is pinned to the exact binary hash and is
+# silently lost on every rebuild — the permission still looks granted in
+# System Settings but no longer applies. Signing with a stable certificate,
+# even a self-signed local one, keeps the identity constant across rebuilds.
+IDENTITY="${OTPEEK_SIGN_IDENTITY:-}"
+if [ -z "$IDENTITY" ]; then
+  IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
+    | grep -i "local signing" | head -1 | sed 's/.*"\(.*\)"/\1/')"
+fi
+
+if [ -n "$IDENTITY" ]; then
+  codesign --force --deep --sign "$IDENTITY" "$APP"
+  echo "    signed as \"$IDENTITY\" — Full Disk Access survives rebuilds"
+else
+  codesign --force --deep --sign - "$APP"
+  cat <<'WARN'
+    signed ad-hoc. Full Disk Access will have to be granted again after
+    every rebuild, because macOS pins it to the exact binary.
+
+    To avoid that, create a local signing certificate once:
+      Keychain Access > Certificate Assistant > Create a Certificate…
+      Name: OTPeek Local Signing
+      Identity Type: Self Signed Root
+      Certificate Type: Code Signing
+    Then rebuild — build.sh picks it up automatically.
+WARN
+fi
 
 echo "==> Installing to $DIST"
 rm -rf "${DIST:?}/$APP_NAME.app"
