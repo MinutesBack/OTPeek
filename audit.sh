@@ -34,6 +34,19 @@ for name in $NET_FILES; do
   fi
 done
 
+echo "== TLS certificate validation =="
+WAIVER_FILES=$(grep -rl "sec_protocol_options_set_verify_block" Sources 2>/dev/null || true)
+if [ -z "$WAIVER_FILES" ]; then
+  echo "  ok    certificate validation is never waived"
+elif [ "$WAIVER_FILES" = "Sources/OTPeek/IMAPClient.swift" ] \
+     && grep -q "if Self.isLoopback(host)" Sources/OTPeek/IMAPClient.swift; then
+  echo "  ok    waived only for loopback, in IMAPClient.swift (local mail bridges)"
+else
+  echo "  FAIL  certificate validation is waived somewhere unguarded:"
+  echo "$WAIVER_FILES" | sed 's/^/          /'
+  FAILURES=$((FAILURES + 1))
+fi
+
 echo "== Telemetry =="
 if grep -rniE "analytics|telemetry|mixpanel|segment\.io|amplitude|sentry|firebase|crashlytics|posthog" Sources > /dev/null 2>&1; then
   echo "  FAIL  found something that looks like analytics"

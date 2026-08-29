@@ -43,6 +43,17 @@ final class IMAPClient {
         self.port = port
     }
 
+    /// True only for addresses that cannot leave this machine.
+    static func isLoopback(_ host: String) -> Bool {
+        let normalised = host.lowercased()
+        if normalised == "localhost" || normalised == "::1" { return true }
+        if normalised == "127.0.0.1" { return true }
+        // The whole 127.0.0.0/8 range is loopback.
+        let parts = normalised.split(separator: ".")
+        guard parts.count == 4, parts[0] == "127" else { return false }
+        return parts.allSatisfy { Int($0).map { $0 >= 0 && $0 <= 255 } ?? false }
+    }
+
     // MARK: - Connection
 
     func connect(timeout: TimeInterval = 30) throws {
@@ -52,6 +63,20 @@ final class IMAPClient {
         let tls = NWProtocolTLS.Options()
         let tcp = NWProtocolTCP.Options()
         tcp.connectionTimeout = Int(timeout)
+
+        // Local bridges — Proton Mail Bridge, and Mailpit or similar in
+        // testing — serve IMAP over a self-signed certificate on loopback.
+        // Certificate validation is waived there and only there: the traffic
+        // never leaves the machine, so there is no network path to intercept.
+        // For every other host, the system's normal validation applies.
+        if Self.isLoopback(host) {
+            sec_protocol_options_set_verify_block(
+                tls.securityProtocolOptions,
+                { _, _, complete in complete(true) },
+                queue)
+            Log.write("[net] \(host) is loopback — accepting its self-signed certificate")
+        }
+
         let parameters = NWParameters(tls: tls, tcp: tcp)
 
         guard let nwPort = NWEndpoint.Port(rawValue: UInt16(port)) else {

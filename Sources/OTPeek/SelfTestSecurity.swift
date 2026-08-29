@@ -49,7 +49,19 @@ extension SelfTest {
         check("no host beyond your own", unexpected.isEmpty,
               unexpected.isEmpty ? "\(allowed.count) allowed" : "extra: \(unexpected.sorted())")
 
-        print("\n\(5 - failures.count) passed, \(failures.count) failed")
+        // Certificate validation is waived on loopback for local bridges, so
+        // the boundary of that exception is worth pinning down precisely.
+        let loopback = ["127.0.0.1", "localhost", "::1", "127.0.0.53"]
+        let routable = ["imap.gmail.com", "127.0.0.1.evil.example", "227.0.0.1",
+                        "1.2.3.4", "0.0.0.0", "example.com"]
+        let loopbackOK = loopback.allSatisfy { IMAPClient.isLoopback($0) }
+        let routableOK = routable.allSatisfy { !IMAPClient.isLoopback($0) }
+        check("loopback recognised", loopbackOK,
+              loopbackOK ? "" : "a local address was treated as remote")
+        check("remote never loopback", routableOK,
+              routableOK ? "" : "a routable host was treated as loopback")
+
+        print("\n\(7 - failures.count) passed, \(failures.count) failed")
         if !failures.isEmpty {
             print("\nFailures:")
             failures.forEach { print($0) }
