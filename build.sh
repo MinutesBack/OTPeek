@@ -10,7 +10,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 APP_NAME="OTPeek"
 BUNDLE_ID="com.otpeek.OTPeek"
-VERSION="1.0.0"
+VERSION="1.0.1"
 DIST="dist"
 
 echo "==> Compiling (release)"
@@ -68,7 +68,7 @@ echo "==> Signing"
 IDENTITY="${OTPEEK_SIGN_IDENTITY:-}"
 if [ -z "$IDENTITY" ]; then
   IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null \
-    | grep -i "local signing" | head -1 | sed 's/.*"\(.*\)"/\1/')"
+    | grep -i "local signing" | head -1 | sed 's/.*"\(.*\)"/\1/' || true)"
 fi
 
 if [ -n "$IDENTITY" ]; then

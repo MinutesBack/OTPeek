@@ -1,0 +1,29 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and test
+        run: ./build.sh
+
+      - name: Package app
+        run: ditto -c -k --sequesterRsrc --keepParent dist/OTPeek.app OTPeek.zip
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "OTPeek 1.0.1" \
+            --notes "Adds reliable multi-inbox push delivery, Messages database decoding, stable local signing, and a downloadable macOS app. Requires macOS 14 or later." \
+            OTPeek.zip
