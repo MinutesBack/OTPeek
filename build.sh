@@ -92,7 +92,12 @@ fi
 echo "==> Installing to $DIST"
 rm -rf "${DIST:?}/$APP_NAME.app"
 mkdir -p "$DIST"
-ditto "$APP" "$DIST/$APP_NAME.app"
+# The Desktop is backed by File Provider on this machine. It stamps the bundle
+# root with Finder metadata that strict codesign verification rejects even
+# though the sealed files are untouched. Do not copy extended attributes, and
+# defensively remove FinderInfo if File Provider adds it after the copy.
+ditto --noextattr "$APP" "$DIST/$APP_NAME.app"
+xattr -d com.apple.FinderInfo "$DIST/$APP_NAME.app" 2>/dev/null || true
 rm -rf "$STAGE"
 
 if [ "${1:-}" = "--install" ]; then
@@ -100,7 +105,8 @@ if [ "${1:-}" = "--install" ]; then
   osascript -e 'quit app "OTPeek"' 2>/dev/null || true
   sleep 1
   rm -rf "/Applications/$APP_NAME.app"
-  ditto "$DIST/$APP_NAME.app" "/Applications/$APP_NAME.app"
+  ditto --noextattr "$DIST/$APP_NAME.app" "/Applications/$APP_NAME.app"
+  xattr -d com.apple.FinderInfo "/Applications/$APP_NAME.app" 2>/dev/null || true
   open "/Applications/$APP_NAME.app"
   echo "==> Launched from /Applications"
 else
